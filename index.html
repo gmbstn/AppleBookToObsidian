@@ -143,15 +143,6 @@
       align-items: start;
     }
 
-    .clip-num {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      font-size: 0.6875rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-
     .clip-txt {
       font-size: 0.9375rem;
       line-height: 1.6;
@@ -396,7 +387,6 @@
       list.innerHTML = clips.map((c, i) => `
         <div class="clip-card">
           <div class="clip-body">
-            <div class="clip-num">Clip ${String(i + 1).padStart(3, '0')}</div>
             <div class="clip-txt">${esc(c.clipText)}</div>
             ${c.noteText ? `<div class="clip-note">Nota — ${esc(c.noteText)}</div>` : ''}
             <div class="clip-date">${c.formattedDate}</div>
@@ -417,13 +407,15 @@
       const title = document.getElementById('book-title').value.trim() || 'Untitled';
       const auth  = document.getElementById('authors').value.trim();
       let md = '# ' + title + '\n';
-      if (auth) md += auth + '\n';
-      md += '\n---\n\n';
-      clips.forEach((c, i) => {
-        md += '**CLIP ' + String(i + 1).padStart(3, '0') + '**\n' + c.clipText + '\n';
-        if (c.noteText) md += '\nNota — ' + c.noteText + '\n';
-        md += '\n' + c.formattedDate + '\n\n---\n\n';
+      if (auth) md += '## ' + auth + '\n';
+      md += '\n';
+      const parts = clips.map(c => {
+        let part = c.clipText + '\n';
+        if (c.noteText) part += '\nNota — ' + c.noteText + '\n';
+        part += c.formattedDate;
+        return part;
       });
+      md += parts.join('\n\n');
       return md.trim();
     }
 
