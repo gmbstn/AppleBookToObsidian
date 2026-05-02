@@ -167,6 +167,15 @@
       margin-top: 8px;
     }
 
+    .clip-date-heading {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+      margin-top: 0;
+    }
+
     .rm-btn {
       background: none;
       border: none;
@@ -264,6 +273,12 @@
           <input type="text" id="authors" placeholder="Detected automatically…" />
         </div>
       </div>
+      <div style="margin-top:1rem;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Helvetica Neue',Arial,sans-serif;font-size:0.875rem;color:var(--text);">
+          <input type="checkbox" id="include-date" checked style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer;" />
+          Include date
+        </label>
+      </div>
       <div id="top-footer" style="display:none; margin-top:1rem; gap:8px; align-items:center;">
         <button id="dl-btn-top" onclick="downloadMD()">Download .md</button>
         <button id="reset-btn-top" onclick="resetApp()">Reset</button>
@@ -293,6 +308,10 @@
     const list  = document.getElementById('clips-list');
     const footer = document.getElementById('footer');
     const stat  = document.getElementById('stat');
+
+    document.getElementById('include-date').addEventListener('change', () => {
+      if (clips.length) render();
+    });
 
     dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('over'));
@@ -389,12 +408,13 @@
     }
 
     function render() {
+      const showDate = document.getElementById('include-date')?.checked ?? true;
       list.innerHTML = clips.map((c, i) => `
         <div class="clip-card">
           <div class="clip-body">
+            ${showDate ? `<div class="clip-date clip-date-heading">${c.formattedDate}</div>` : ''}
             <div class="clip-txt">"${esc(c.clipText)}"</div>
             ${c.noteText ? `<div class="clip-note"><em>${esc(c.noteText)}</em></div>` : ''}
-            <div class="clip-date">${c.formattedDate}</div>
           </div>
           <button class="rm-btn" onclick="removeClip(${i})" title="Remove">&#215;</button>
         </div>
@@ -409,18 +429,20 @@
     }
 
     function generateMD() {
-      const title = document.getElementById('book-title').value.trim() || 'Untitled';
-      const auth  = document.getElementById('authors').value.trim();
+      const title     = document.getElementById('book-title').value.trim() || 'Untitled';
+      const auth      = document.getElementById('authors').value.trim();
+      const showDate  = document.getElementById('include-date')?.checked ?? true;
       let md = '# ' + title + '\n';
       if (auth) md += '## ' + auth + '\n';
       md += '\n';
       const parts = clips.map(c => {
-        let part = '"' + c.clipText + '"\n';
+        let part = '';
+        if (showDate) part += '### ' + c.formattedDate + '\n';
+        part += '"' + c.clipText + '"\n';
         if (c.noteText) part += '_' + c.noteText + '_\n';
-        part += c.formattedDate;
         return part;
       });
-      md += parts.join('\n\n');
+      md += parts.join('\n');
       return md.trim();
     }
 
