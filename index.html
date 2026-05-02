@@ -154,7 +154,7 @@
       font-size: 0.8125rem;
       color: var(--muted);
       font-style: italic;
-      margin-top: 8px;
+      margin-top: 4px;
       padding-left: 10px;
       border-left: 2px solid var(--border);
       line-height: 1.5;
@@ -188,7 +188,7 @@
       align-items: center;
     }
 
-    #dl-btn {
+    #dl-btn, #dl-btn-top {
       flex: 1;
       padding: 10px 20px;
       font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -203,7 +203,7 @@
     }
     #dl-btn:hover { opacity: 0.88; }
 
-    #reset-btn {
+    #reset-btn, #reset-btn-top {
       padding: 10px 16px;
       font-family: 'Helvetica Neue', Arial, sans-serif;
       font-size: 0.875rem;
@@ -263,6 +263,10 @@
           <label class="field-lbl" for="authors">Author(s)</label>
           <input type="text" id="authors" placeholder="Detected automatically…" />
         </div>
+      </div>
+      <div id="top-footer" style="display:none; margin-top:1rem; gap:8px; align-items:center;">
+        <button id="dl-btn-top" onclick="downloadMD()">Download .md</button>
+        <button id="reset-btn-top" onclick="resetApp()">Reset</button>
       </div>
     </div>
 
@@ -328,6 +332,7 @@
             render();
             cfg.style.display = 'block';
             footer.style.display = 'flex';
+            document.getElementById('top-footer').style.display = 'flex';
             stat.textContent = clips.length + ' clip' + (clips.length !== 1 ? 's' : '') + ' loaded';
           }
         };
@@ -387,8 +392,8 @@
       list.innerHTML = clips.map((c, i) => `
         <div class="clip-card">
           <div class="clip-body">
-            <div class="clip-txt">${esc(c.clipText)}</div>
-            ${c.noteText ? `<div class="clip-note">Nota — ${esc(c.noteText)}</div>` : ''}
+            <div class="clip-txt">"${esc(c.clipText)}"</div>
+            ${c.noteText ? `<div class="clip-note"><em>${esc(c.noteText)}</em></div>` : ''}
             <div class="clip-date">${c.formattedDate}</div>
           </div>
           <button class="rm-btn" onclick="removeClip(${i})" title="Remove">&#215;</button>
@@ -410,8 +415,8 @@
       if (auth) md += '## ' + auth + '\n';
       md += '\n';
       const parts = clips.map(c => {
-        let part = c.clipText + '\n';
-        if (c.noteText) part += '\nNota — ' + c.noteText + '\n';
+        let part = '"' + c.clipText + '"\n';
+        if (c.noteText) part += '_' + c.noteText + '_\n';
         part += c.formattedDate;
         return part;
       });
@@ -435,6 +440,7 @@
       list.innerHTML = '';
       cfg.style.display = 'none';
       footer.style.display = 'none';
+      document.getElementById('top-footer').style.display = 'none';
       stat.textContent = '';
       document.getElementById('book-title').value = '';
       document.getElementById('authors').value = '';
