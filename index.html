@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clippings → Markdown</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #F7F4EF;
+      --surface:  #FFFFFF;
+      --border:   #E2DDD5;
+      --text:     #1A1816;
+      --muted:    #7A746A;
+      --accent:   #3A5A40;
+      --accent-bg:#EDF2EE;
+      --danger:   #C0392B;
+      --mono:     'Courier New', Courier, monospace;
+      --sans:     'Georgia', 'Times New Roman', serif;
+      --radius:   10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      max-width: 560px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: normal;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    header p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    #app { width: 100%; max-width: 600px; }
+
+    /* Drop zone */
+    #dropzone {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      background: var(--surface);
+    }
+    #dropzone:hover, #dropzone.over {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .dz-icon {
+      margin: 0 auto 1rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    #dropzone h2 {
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+
+    #dropzone p {
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    /* Config */
+    #config {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .field-grp { display: flex; flex-direction: column; gap: 5px; }
+
+    .field-lbl {
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      font-family: var(--sans);
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+
+    /* Clips */
+    #clips-list { margin-top: 1rem; }
+
+    .clip-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .clip-num {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.6875rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .clip-txt {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .clip-note {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 8px;
+      padding-left: 10px;
+      border-left: 2px solid var(--border);
+      line-height: 1.5;
+    }
+
+    .clip-date {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .rm-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1.125rem;
+      line-height: 1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.1s, background 0.1s;
+    }
+    .rm-btn:hover { color: var(--danger); background: #FDF0EF; }
+
+    /* Footer */
+    #footer {
+      display: none;
+      margin-top: 1.25rem;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #dl-btn {
+      flex: 1;
+      padding: 10px 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    #dl-btn:hover { opacity: 0.88; }
+
+    #reset-btn {
+      padding: 10px 16px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.875rem;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #reset-btn:hover { border-color: var(--muted); color: var(--text); }
+
+    #stat {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    footer.page-footer {
+      margin-top: 4rem;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Clippings → Markdown</h1>
+    <p>Drop your <code>.textClipping</code> files exported from Apple Books to generate a single formatted <code>.md</code> file for Obsidian.</p>
+  </header>
+
+  <div id="app">
+    <div id="dropzone">
+      <div class="dz-icon">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="3" width="14" height="19" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+          <rect x="9" y="7" width="14" height="19" rx="2" stroke="currentColor" stroke-width="1.4" fill="none" opacity="0.5"/>
+          <path d="M27 21v11m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Drop .textClipping files here</h2>
+      <p>Select all files in Finder and drag them at once — or click to browse</p>
+    </div>
+
+    <div id="config">
+      <div class="field-row">
+        <div class="field-grp">
+          <label class="field-lbl" for="book-title">Book title</label>
+          <input type="text" id="book-title" placeholder="Detected automatically…" />
+        </div>
+        <div class="field-grp">
+          <label class="field-lbl" for="authors">Author(s)</label>
+          <input type="text" id="authors" placeholder="Detected automatically…" />
+        </div>
+      </div>
+    </div>
+
+    <div id="clips-list"></div>
+
+    <div id="footer" style="display:none">
+      <button id="dl-btn" onclick="downloadMD()">Download .md</button>
+      <button id="reset-btn" onclick="resetApp()">Reset</button>
+    </div>
+    <p id="stat"></p>
+  </div>
+
+  <footer class="page-footer">
+    Apple Books → Obsidian converter
+  </footer>
+
+  <script>
+    const MONTHS = {January:1,February:2,March:3,April:4,May:5,June:6,July:7,August:8,September:9,October:10,November:11,December:12};
+    let clips = [];
+    let bookSet = false, authSet = false;
+
+    const dz    = document.getElementById('dropzone');
+    const cfg   = document.getElementById('config');
+    const list  = document.getElementById('clips-list');
+    const footer = document.getElementById('footer');
+    const stat  = document.getElementById('stat');
+
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault(); dz.classList.remove('over');
+      const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.textClipping'));
+      if (files.length) processFiles(files);
+    });
+    dz.addEventListener('click', () => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.multiple = true; inp.accept = '.textClipping';
+      inp.onchange = e => processFiles(Array.from(e.target.files).filter(f => f.name.endsWith('.textClipping')));
+      inp.click();
+    });
+
+    function processFiles(files) {
+      let pending = files.length;
+      const newClips = [];
+      files.forEach(f => {
+        const r = new FileReader();
+        r.onload = e => {
+          const clip = parseClipping(e.target.result);
+          if (clip) newClips.push(clip);
+          if (--pending === 0) {
+            newClips.forEach(nc => {
+              if (!clips.find(c => c.clipText === nc.clipText)) clips.push(nc);
+            });
+            clips.sort((a, b) => a.rawDate - b.rawDate);
+            if (!bookSet && newClips[0]?.bookTitle) {
+              document.getElementById('book-title').value = newClips[0].bookTitle;
+              bookSet = true;
+            }
+            if (!authSet && newClips[0]?.authors) {
+              document.getElementById('authors').value = newClips[0].authors;
+              authSet = true;
+            }
+            render();
+            cfg.style.display = 'block';
+            footer.style.display = 'flex';
+            stat.textContent = clips.length + ' clip' + (clips.length !== 1 ? 's' : '') + ' loaded';
+          }
+        };
+        r.readAsText(f, 'UTF-8');
+      });
+    }
+
+    function parseClipping(content) {
+      const htmlMatch = content.match(/<html[\s\S]*?<\/html>/i);
+      if (!htmlMatch) return null;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlMatch[0], 'text/html');
+      const excerpts = doc.querySelectorAll('.dragexcerpt');
+      const clipEl   = doc.querySelector('.dragrepresentativetext');
+      const noteEl   = doc.querySelector('.dragnote b');
+      if (!clipEl) return null;
+
+      const dateRaw = (excerpts[0]?.innerHTML || '').split(/<br/i)[0].replace(/<[^>]+>/g, '').trim();
+
+      // Strip surrounding smart quotes and straight quotes
+      let clipText = clipEl.textContent.trim();
+      clipText = clipText.replace(/^[\u201C\u201D\u00AB"']/, '').replace(/[\u201C\u201D\u00BB"']$/, '').trim();
+
+      const noteText = (noteEl?.textContent || '').trim();
+
+      let bookTitle = '', authors = '';
+      if (excerpts[1]) {
+        const lines = excerpts[1].innerHTML
+          .split(/<br\s*\/?>/i)
+          .map(l => l.replace(/<[^>]+>/g, '').trim())
+          .filter(Boolean);
+        const fi = lines.findIndex(l => /excerpt from/i.test(l));
+        if (fi !== -1) { bookTitle = lines[fi + 1] || ''; authors = lines[fi + 2] || ''; }
+      }
+
+      return { dateRaw, formattedDate: formatDate(dateRaw), rawDate: parseRawDate(dateRaw), clipText, noteText, bookTitle, authors };
+    }
+
+    function formatDate(s) {
+      const m = s.match(/(\d+)\s+(\w+)\s+(\d{4})/);
+      if (!m) return s;
+      const mo = MONTHS[m[2]];
+      if (!mo) return s;
+      return String(m[1]).padStart(2, '0') + '.' + String(mo).padStart(2, '0') + '.' + m[3];
+    }
+
+    function parseRawDate(s) {
+      const m = s.match(/(\d+)\s+(\w+)\s+(\d{4})/);
+      return m ? new Date(m[2] + ' ' + m[1] + ', ' + m[3]) : new Date(0);
+    }
+
+    function esc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function render() {
+      list.innerHTML = clips.map((c, i) => `
+        <div class="clip-card">
+          <div class="clip-body">
+            <div class="clip-num">Clip ${String(i + 1).padStart(3, '0')}</div>
+            <div class="clip-txt">${esc(c.clipText)}</div>
+            ${c.noteText ? `<div class="clip-note">Nota — ${esc(c.noteText)}</div>` : ''}
+            <div class="clip-date">${c.formattedDate}</div>
+          </div>
+          <button class="rm-btn" onclick="removeClip(${i})" title="Remove">&#215;</button>
+        </div>
+      `).join('');
+    }
+
+    function removeClip(i) {
+      clips.splice(i, 1);
+      render();
+      stat.textContent = clips.length + ' clip' + (clips.length !== 1 ? 's' : '') + ' loaded';
+      if (!clips.length) resetApp();
+    }
+
+    function generateMD() {
+      const title = document.getElementById('book-title').value.trim() || 'Untitled';
+      const auth  = document.getElementById('authors').value.trim();
+      let md = '# ' + title + '\n';
+      if (auth) md += auth + '\n';
+      md += '\n---\n\n';
+      clips.forEach((c, i) => {
+        md += '**CLIP ' + String(i + 1).padStart(3, '0') + '**\n' + c.clipText + '\n';
+        if (c.noteText) md += '\nNota — ' + c.noteText + '\n';
+        md += '\n' + c.formattedDate + '\n\n---\n\n';
+      });
+      return md.trim();
+    }
+
+    function downloadMD() {
+      const md    = generateMD();
+      const title = document.getElementById('book-title').value.trim() || 'highlights';
+      const fname = title.replace(/[^a-z0-9]+/gi, '_').toLowerCase() + '_highlights.md';
+      const blob  = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url   = URL.createObjectURL(blob);
+      const a     = document.createElement('a');
+      a.href = url; a.download = fname; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetApp() {
+      clips = []; bookSet = false; authSet = false;
+      list.innerHTML = '';
+      cfg.style.display = 'none';
+      footer.style.display = 'none';
+      stat.textContent = '';
+      document.getElementById('book-title').value = '';
+      document.getElementById('authors').value = '';
+    }
+  </script>
+</body>
+</html>
