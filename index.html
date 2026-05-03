@@ -101,7 +101,7 @@
       margin-top: 1rem;
     }
 
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
 
     .field-grp { display: flex; flex-direction: column; gap: 5px; }
 
@@ -272,6 +272,10 @@
           <label class="field-lbl" for="authors">Author(s)</label>
           <input type="text" id="authors" placeholder="Detected automatically…" />
         </div>
+        <div class="field-grp">
+          <label class="field-lbl" for="pub-year">First publication year</label>
+          <input type="text" id="pub-year" placeholder="e.g. 1972" maxlength="4" />
+        </div>
       </div>
       <div style="margin-top:1rem;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Helvetica Neue',Arial,sans-serif;font-size:0.875rem;color:var(--text);">
@@ -431,8 +435,10 @@
     function generateMD() {
       const title     = document.getElementById('book-title').value.trim() || 'Untitled';
       const auth      = document.getElementById('authors').value.trim();
+      const year      = document.getElementById('pub-year').value.trim();
       const showDate  = document.getElementById('include-date')?.checked ?? true;
-      let md = '# ' + title + '\n';
+      const fullTitle = year ? title + ' (' + year + ')' : title;
+      let md = '# ' + fullTitle + '\n';
       if (auth) md += '## ' + auth + '\n';
       md += '\n';
       const parts = clips.map(c => {
@@ -466,6 +472,7 @@
       stat.textContent = '';
       document.getElementById('book-title').value = '';
       document.getElementById('authors').value = '';
+      document.getElementById('pub-year').value = '';
     }
   </script>
 </body>
